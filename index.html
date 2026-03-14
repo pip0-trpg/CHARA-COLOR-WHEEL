@@ -521,6 +521,14 @@ body:not(.sidebar-hidden) .stoggle-icon { transform: rotate(180deg); }
     <div class="storage-pct" id="storagePct"></div>
   </div>
 
+  <div class="lbl">Center Label（色相環の中央テキスト）</div>
+  <input class="inp" type="text" id="centerLabelInput" placeholder="例：好きなキャラ" maxlength="30" autocomplete="off" oninput="onCenterLabelChange(this.value)">
+  <div class="lbl" style="margin-top:10px;">Center Label Size</div>
+  <div class="slider-row">
+    <input type="range" id="centerLabelSizeSlider" min="10" max="72" value="18" oninput="onCenterLabelSizeChange(this.value)">
+    <span class="sval" id="centerLabelSizeVal">18px</span>
+  </div>
+
   <div class="lbl">Character Name</div>
   <input class="inp" type="text" id="nameInput" placeholder="名前を入力" autocomplete="off">
 
@@ -609,6 +617,8 @@ let showNames  = true;
 let showImages = true;
 let manualOrder = false;
 let currentTheme = 'light';
+let centerLabel = '';
+let centerLabelSize = 18;
 let dragSrcId = null, dragOverId = null;
 
 let panX = 0, panY = 0;
@@ -692,7 +702,7 @@ function compressImage(dataUrl, maxSide = 480, quality = 0.82) {
 // ================================================================
 async function saveData() {
     if(!db) return;
-    await idbSet(STORE_MAIN, 'state', { charasList, historyColors, baseSize, orbitScale, showNames, showImages, manualOrder, currentTheme });
+    await idbSet(STORE_MAIN, 'state', { charasList, historyColors, baseSize, orbitScale, showNames, showImages, manualOrder, currentTheme, centerLabel, centerLabelSize });
     updateStorageBar();
 }
 async function loadData() {
@@ -706,6 +716,8 @@ async function loadData() {
     if(s.showImages  != null) showImages  = s.showImages;
     if(s.manualOrder != null) manualOrder = s.manualOrder;
     if(s.currentTheme)        { currentTheme = s.currentTheme; applyTheme(currentTheme, false); }
+    if(s.centerLabel != null) { centerLabel = s.centerLabel; document.getElementById('centerLabelInput').value = centerLabel; }
+    if(s.centerLabelSize != null) { centerLabelSize = s.centerLabelSize; document.getElementById('centerLabelSizeSlider').value = centerLabelSize; document.getElementById('centerLabelSizeVal').textContent = centerLabelSize + 'px'; }
 }
 
 // ================================================================
@@ -855,6 +867,8 @@ async function addCharacter() {
 // ================================================================
 async function onSizeChange(val)  { baseSize  =parseInt(val); document.getElementById('sizeVal').textContent =val;       await saveData(); renderStage(); }
 async function onOrbitChange(val) { orbitScale=parseInt(val); document.getElementById('orbitVal').textContent=val+'%'; await saveData(); renderStage(); }
+async function onCenterLabelChange(val) { centerLabel = val; await saveData(); renderStage(); }
+async function onCenterLabelSizeChange(val) { centerLabelSize = parseInt(val); document.getElementById('centerLabelSizeVal').textContent = val + 'px'; await saveData(); renderStage(); }
 
 // ================================================================
 //  PANEL / TOGGLES
@@ -1053,6 +1067,23 @@ function renderStage() {
     cNodes.forEach(el=>inner.appendChild(el));
     iNodes.forEach(el=>inner.appendChild(el));
     nNodes.forEach(el=>inner.appendChild(el));
+
+    // 中央ラベル
+    if(centerLabel && centerLabel.trim()) {
+        const lines = centerLabel.trim().split(/[\n　 ]+/).filter(Boolean);
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:5;`;
+        lines.forEach((line, idx) => {
+            const span = document.createElement('div');
+            span.textContent = line;
+            const fs = idx === 0 ? centerLabelSize : Math.max(10, Math.round(centerLabelSize * 0.65));
+            const fw = idx === 0 ? 700 : 400;
+            span.style.cssText = `font-family:'Noto Sans JP',sans-serif;font-size:${fs}px;font-weight:${fw};color:#9aa5b1;letter-spacing:0.06em;white-space:nowrap;line-height:1.4;`;
+            wrapper.appendChild(span);
+        });
+        inner.appendChild(wrapper);
+    }
+
     applyPan();
 }
 
@@ -1110,6 +1141,24 @@ async function saveImage() {
         charasList.forEach((chara,i)=>{ const a=((i/count)*360-90)*Math.PI/180; const cx2=cx+radiusColor*Math.cos(a),cy2=cy+radiusColor*Math.sin(a); ctx.save(); ctx.shadowColor='rgba(0,0,0,0.18)'; ctx.shadowBlur=18*DPR; ctx.shadowOffsetY=4*DPR; ctx.beginPath(); ctx.arc(cx2,cy2,colorSize/2,0,Math.PI*2); ctx.fillStyle=chara.color; ctx.fill(); ctx.restore(); });
         charasList.forEach((chara,i)=>{ const img=loadedImgs[i]; if(!img) return; const a=((i/count)*360-90)*Math.PI/180; const ix=cx+radiusImg*Math.cos(a),iy=cy+radiusImg*Math.sin(a),r=imgSize/2; ctx.save(); ctx.shadowColor='rgba(0,0,0,0.2)'; ctx.shadowBlur=22*DPR; ctx.shadowOffsetY=5*DPR; ctx.beginPath(); ctx.arc(ix,iy,r,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.restore(); ctx.save(); ctx.beginPath(); ctx.arc(ix,iy,r,0,Math.PI*2); ctx.clip(); ctx.fillStyle='#ffffff'; ctx.fillRect(ix-r,iy-r,imgSize,imgSize); ctx.drawImage(img,ix-r,iy-r,imgSize,imgSize); ctx.restore(); });
         if(showNames){ const fs=13*DPR,px=13*DPR,py=5*DPR,lr=20*DPR; ctx.font=`500 ${fs}px "Noto Sans JP",sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; charasList.forEach((chara,i)=>{ const a=((i/count)*360-90)*Math.PI/180; const nr=radiusColor+colorSize/2+GAP/2; const nx=cx+nr*Math.cos(a),ny=cy+nr*Math.sin(a); const tw=ctx.measureText(chara.name).width; const bw=tw+px*2,bh=fs+py*2; ctx.save(); ctx.shadowColor='rgba(23,51,74,0.1)'; ctx.shadowBlur=8*DPR; ctx.shadowOffsetY=2*DPR; pill(nx-bw/2,ny-bh/2,bw,bh,lr); ctx.fillStyle='rgba(255,255,255,0.96)'; ctx.fill(); ctx.restore(); ctx.fillStyle='#17334A'; ctx.fillText(chara.name,nx,ny); }); }
+
+        // 中央ラベル
+        if(centerLabel && centerLabel.trim()) {
+            const lines = centerLabel.trim().split(/[\n　 ]+/).filter(Boolean);
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const lineHeightRatio = 1.5;
+            const sizes = lines.map((_, idx) => idx === 0 ? centerLabelSize * DPR : Math.max(10, Math.round(centerLabelSize * 0.65)) * DPR);
+            const totalH = sizes.reduce((s, fs) => s + fs * lineHeightRatio, 0) - sizes[sizes.length-1] * (lineHeightRatio - 1);
+            let curY = cy - totalH / 2 + sizes[0] / 2;
+            lines.forEach((line, idx) => {
+                const fs = sizes[idx];
+                const fw = idx === 0 ? 700 : 400;
+                ctx.font = `${fw} ${fs}px "Noto Sans JP",sans-serif`;
+                ctx.fillStyle = '#9aa5b1';
+                ctx.fillText(line, cx, curY);
+                curY += fs * lineHeightRatio;
+            });
+        }
 
         canvas.toBlob(blob=>{ const url=URL.createObjectURL(blob); const link=document.createElement('a'); link.download='chara-color-wheel.png'; link.href=url; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); },'image/png');
         showToast('画像を保存しました');
