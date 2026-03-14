@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chara Color Wheel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════
+   DESIGN TOKENS — Light / Dark
+══════════════════════════════════════════════ */
+:root {
+  /* ライトモード */
+  --bg:          #F4F4F4;
+  --surface:     #FFFFFF;
+  --panel:       #FFFFFF;
+  --raised:      #ECEEF0;
+  --raised2:     #E2E5E8;
+  --ink:         #17334A;
+  --ink-mid:     rgba(23,51,74,0.62);
+  --ink-dim:     rgba(23,51,74,0.38);
+  --ink-faint:   rgba(23,51,74,0.18);
+  --accent:      #00C0D1;
+  --accent-soft: rgba(0,192,209,0.14);
+  --accent-text: #007A87;
+  --line:        rgba(23,51,74,0.1);
+  --line-strong: rgba(23,51,74,0.18);
+  --danger:      #D94F4F;
+  --shadow-sm:   0 1px 4px rgba(23,51,74,0.08);
+  --shadow-md:   0 4px 16px rgba(23,51,74,0.1);
+  --shadow-lg:   0 8px 32px rgba(23,51,74,0.12);
+  --sidebar-w:   284px;
+  --toggle-sz:   38px;
+  --radius:      10px;
+  --radius-sm:   7px;
+}
+[data-theme="dark"] {
+  --bg:          #111A24;
+  --surface:     #17232F;
+  --panel:       #17232F;
+  --raised:      #1E2D3D;
+  --raised2:     #263749;
+  --ink:         #EDF0F3;
+  --ink-mid:     rgba(237,240,243,0.65);
+  --ink-dim:     rgba(237,240,243,0.38);
+  --ink-faint:   rgba(237,240,243,0.16);
+  --accent:      #00C0D1;
+  --accent-soft: rgba(0,192,209,0.16);
+  --accent-text: #00D8EB;
+  --line:        rgba(237,240,243,0.09);
+  --line-strong: rgba(237,240,243,0.16);
+  --danger:      #E06060;
+  --shadow-sm:   0 1px 4px rgba(0,0,0,0.28);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,0.45);
+}
+
+/* ══════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  display: flex; height: 100vh; overflow: hidden;
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  font-weight: 400;
+  background: var(--bg);
+  color: var(--ink);
+  transition: background .3s, color .3s;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
+button { font-family: inherit; }
+
+/* ══════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  padding: 22px 20px 24px;
+  overflow-y: auto; z-index: 100;
+  transition:
+    width .32s cubic-bezier(.4,0,.2,1),
+    min-width .32s cubic-bezier(.4,0,.2,1),
+    padding .32s cubic-bezier(.4,0,.2,1),
+    opacity .22s, background .3s, border-color .3s;
+}
+body.sidebar-hidden .sidebar {
+  width: 0; min-width: 0; padding: 0;
+  overflow: hidden; border-right: none; opacity: 0;
+}
+
+/* brand */
+.brand {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.brand-title {
+  font-family: 'Nunito', 'Noto Sans JP', sans-serif;
+  font-size: 1.12rem; font-weight: 900;
+  color: var(--ink); letter-spacing: -0.01em;
+}
+.brand-title em { color: var(--accent); font-style: normal; }
+
+/* dark mode toggle */
+.theme-btn {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  background: var(--raised); border: 1px solid var(--line);
+  color: var(--ink-mid); font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: .18s;
+}
+.theme-btn:hover { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent); }
+
+/* section label */
+.lbl {
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-top: 20px; margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+/* input */
+.inp {
+  width: 100%; padding: 9px 12px;
+  background: var(--raised); border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm); font-family: inherit; font-size: 0.88rem;
+  color: var(--ink); outline: none;
+  transition: border-color .18s, background .18s;
+}
+.inp:focus { border-color: var(--accent); background: var(--surface); }
+.inp::placeholder { color: var(--ink-faint); }
+
+/* color row */
+.color-row { display: flex; align-items: center; gap: 9px; }
+.color-swatch {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  position: relative; overflow: hidden; flex-shrink: 0;
+  cursor: pointer; border: 1.5px solid var(--line);
+  box-shadow: var(--shadow-sm); transition: border-color .18s;
+}
+.color-swatch:hover { border-color: var(--accent); }
+.color-swatch input[type="color"] {
+  position: absolute; top: -12px; left: -12px;
+  width: 78px; height: 78px; border: none; cursor: pointer;
+}
+.hex-inp { flex: 1; font-size: 0.82rem; font-weight: 500; }
+
+/* file upload */
+input[type="file"] { display: none; }
+.upload-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 8px 12px;
+  background: var(--raised); border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.82rem; color: var(--ink-dim); transition: .18s;
+  text-align: center;
+}
+.upload-btn:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+.img-preview-mini {
+  width: 36px; height: 36px; border-radius: 50%; margin-top: 8px;
+  object-fit: cover; display: none;
+  border: 2px solid var(--accent); box-shadow: var(--shadow-sm);
+}
+
+/* add button */
+.add-btn {
+  width: 100%; padding: 10px; margin-top: 12px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.02em;
+  box-shadow: 0 4px 14px rgba(0,192,209,0.28);
+  transition: opacity .18s, transform .18s, box-shadow .18s;
+}
+.add-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,192,209,0.36); }
+
+/* sliders */
+.slider-row { display: flex; align-items: center; gap: 10px; }
+.slider-row input[type="range"] {
+  flex: 1; height: 4px; cursor: pointer; appearance: none;
+  background: var(--raised2); border-radius: 3px; outline: none;
+  accent-color: var(--accent);
+  transition: background .3s;
+}
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none; width: 15px; height: 15px;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-sm);
+  transition: transform .15s;
+}
+.slider-row input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.sval { font-size: 0.72rem; font-weight: 700; color: var(--ink-dim); width: 36px; text-align: right; white-space: nowrap; }
+
+/* chara list header */
+.list-header { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; margin-bottom: 8px; }
+.list-header .lbl { margin: 0; }
+.sort-badge {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
+  padding: 3px 9px; border-radius: 20px; cursor: pointer;
+  border: 1.5px solid var(--line); color: var(--ink-dim); background: transparent;
+  transition: .18s;
+}
+.sort-badge:hover { border-color: var(--accent); color: var(--accent-text); }
+.sort-badge.manual { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* chara list */
+.chara-list { display: flex; flex-direction: column; gap: 3px; }
+.chara-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 7px; border-radius: var(--radius-sm);
+  border: 1.5px solid transparent; transition: background .14s, border-color .14s;
+}
+.chara-item:hover { background: var(--raised); border-color: var(--line); }
+.chara-item.drag-over { border-color: var(--accent); background: var(--accent-soft); }
+.chara-item.dragging { opacity: 0.3; }
+.drag-handle { color: var(--ink-faint); font-size: 0.72rem; cursor: grab; user-select: none; flex-shrink: 0; line-height: 1; transition: color .14s; }
+.drag-handle:hover { color: var(--ink-dim); }
+.drag-handle:active { cursor: grabbing; }
+.chara-dot-wrap { position: relative; width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
+.chara-dot { width: 20px; height: 20px; border-radius: 50%; display: block; box-shadow: var(--shadow-sm); transition: transform .14s; }
+.chara-dot-wrap:hover .chara-dot { transform: scale(1.15); }
+.chara-dot-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.chara-thumb-wrap { position: relative; width: 26px; height: 26px; flex-shrink: 0; cursor: pointer; }
+.chara-thumb-wrap:hover::after {
+  content: '+'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+  background: rgba(0,192,209,0.55); color: #fff; border-radius: 50%; pointer-events: none;
+}
+.chara-thumb { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 2px solid var(--surface); box-shadow: var(--shadow-sm); display: block; }
+.chara-ph { width: 26px; height: 26px; border-radius: 50%; background: var(--raised); border: 1.5px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; font-size: 0.62rem; color: var(--ink-faint); }
+.chara-img-input { display: none; }
+.chara-name {
+  flex: 1; font-size: 0.82rem; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--ink); cursor: text; border-radius: 5px; padding: 2px 5px;
+  transition: background .14s;
+}
+.chara-name:hover { background: var(--raised); }
+.chara-name-inp {
+  flex: 1; width: 0; min-width: 0; font-size: 0.82rem; font-family: inherit;
+  color: var(--ink); background: var(--raised); border: 1.5px solid var(--accent);
+  border-radius: 5px; padding: 2px 6px; outline: none;
+}
+.chara-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.ic-btn {
+  width: 24px; height: 24px; border-radius: 5px; border: none; cursor: pointer;
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+  transition: .14s; background: transparent; color: var(--ink-faint);
+}
+.ic-btn:hover { background: var(--raised); color: var(--ink-mid); }
+.ic-btn.danger:hover { background: rgba(217,79,79,0.12); color: var(--danger); }
+.ic-btn:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+
+/* preset */
+.preset-row { display: flex; gap: 6px; }
+.preset-inp { flex: 1; }
+.preset-save {
+  flex-shrink: 0; padding: 9px 11px;
+  background: var(--raised); border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm); font-family: inherit;
+  font-size: 0.78rem; font-weight: 700; color: var(--ink-mid);
+  cursor: pointer; white-space: nowrap; transition: .18s;
+}
+.preset-save:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+.preset-list { display: flex; flex-direction: column; gap: 3px; margin-top: 7px; }
+.preset-item {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 8px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--line); transition: background .14s;
+}
+.preset-item:hover { background: var(--raised); }
+.preset-name { flex: 1; font-size: 0.8rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.preset-cnt { font-size: 0.66rem; color: var(--ink-dim); flex-shrink: 0; background: var(--raised2); padding: 1px 6px; border-radius: 20px; }
+.preset-load {
+  padding: 3px 9px; border-radius: 6px; border: 1.5px solid var(--line);
+  background: transparent; font-family: inherit;
+  font-size: 0.7rem; font-weight: 700; color: var(--ink-dim);
+  cursor: pointer; transition: .14s;
+}
+.preset-load:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+.preset-overwrite {
+  padding: 3px 8px; border-radius: 6px; border: 1.5px solid var(--line);
+  background: transparent; font-family: inherit;
+  font-size: 0.68rem; font-weight: 700; color: var(--ink-dim);
+  cursor: pointer; transition: .14s; white-space: nowrap;
+}
+.preset-overwrite:hover { border-color: #F59E0B; color: #F59E0B; background: rgba(245,158,11,0.1); }
+.preset-del {
+  width: 22px; height: 22px; border-radius: 5px; border: none; cursor: pointer;
+  background: transparent; color: var(--ink-faint); font-size: 0.68rem;
+  display: flex; align-items: center; justify-content: center; transition: .14s; flex-shrink: 0;
+}
+.preset-del:hover { background: rgba(217,79,79,0.1); color: var(--danger); }
+.preset-empty { font-size: 0.76rem; color: var(--ink-faint); padding: 4px 2px; }
+
+/* history */
+.history-dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.hswatch {
+  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.14); transition: transform .18s, box-shadow .18s;
+}
+.hswatch:hover { transform: scale(1.3); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+/* storage */
+.storage-wrap { margin-top: 20px; padding: 11px 12px; background: var(--raised); border: 1.5px solid var(--line); border-radius: var(--radius); }
+.storage-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
+.storage-text  { font-size: 0.68rem; font-weight: 700; color: var(--ink-mid); }
+.storage-quota { font-size: 0.62rem; color: var(--ink-dim); }
+.storage-track { height: 4px; border-radius: 3px; background: var(--raised2); overflow: hidden; }
+.storage-fill  { height: 100%; border-radius: 3px; min-width: 2px; background: var(--accent); transition: width .5s, background .5s; }
+.storage-fill.warn  { background: #F59E0B; }
+.storage-fill.alert { background: var(--danger); }
+.storage-pct { font-size: 0.62rem; font-weight: 700; text-align: right; margin-top: 4px; color: var(--accent-text); }
+
+/* reset */
+.reset-btn {
+  margin-top: 20px; width: 100%; padding: 9px;
+  background: transparent; border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm); font-family: inherit;
+  font-size: 0.78rem; color: var(--ink-dim); cursor: pointer; transition: .18s;
+}
+.reset-btn:hover { border-color: var(--danger); color: var(--danger); background: rgba(217,79,79,0.06); }
+
+/* ══════════════════════════════════════════════
+   SIDEBAR TOGGLE
+══════════════════════════════════════════════ */
+.sidebar-toggle {
+  position: fixed; top: 16px; left: 16px; z-index: 2000;
+  width: var(--toggle-sz); height: var(--toggle-sz);
+  border-radius: var(--radius); background: var(--accent);
+  border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(0,192,209,0.35);
+  transition: left .32s cubic-bezier(.4,0,.2,1), opacity .18s, transform .18s;
+}
+.sidebar-toggle:hover { opacity: 0.88; transform: scale(1.06); }
+body:not(.sidebar-hidden) .sidebar-toggle { left: calc(var(--sidebar-w) + 12px); }
+.stoggle-icon { transition: transform .3s cubic-bezier(.4,0,.2,1); display: block; }
+body:not(.sidebar-hidden) .stoggle-icon { transform: rotate(180deg); }
+
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(23,51,74,0.3); z-index: 1500; backdrop-filter: blur(2px); }
+.sidebar-overlay.open { display: block; }
+
+/* ══════════════════════════════════════════════
+   STAGE
+══════════════════════════════════════════════ */
+#stage-container {
+  flex: 1; position: relative; overflow: hidden;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, rgba(23,51,74,0.22) 1px, transparent 1px);
+  background-size: 28px 28px;
+  cursor: grab;
+  transition: background-color .3s;
+}
+[data-theme="dark"] #stage-container {
+  background-image: radial-gradient(circle, rgba(237,240,243,0.18) 1px, transparent 1px);
+}
+#stage-container.panning { cursor: grabbing; }
+#stage { width: 100%; height: 100%; position: absolute; }
+#stageInner { width: 100%; height: 100%; position: absolute; will-change: transform; }
+
+/* ══════════════════════════════════════════════
+   STAGE CONTROLS
+══════════════════════════════════════════════ */
+.stage-controls {
+  position: absolute; top: 16px; right: 16px;
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 5px; z-index: 500;
+}
+.ctrl-toggle {
+  width: var(--toggle-sz); height: var(--toggle-sz);
+  border-radius: var(--radius); background: var(--accent);
+  border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(0,192,209,0.35);
+  transition: opacity .18s, transform .18s;
+  flex-shrink: 0;
+}
+.ctrl-toggle:hover { opacity: 0.88; transform: scale(1.06); }
+.ctrl-toggle.open { background: var(--ink); box-shadow: var(--shadow-md); }
+.ctoggle-icon { transition: transform .3s cubic-bezier(.4,0,.2,1); display: block; }
+.ctrl-toggle.open .ctoggle-icon { transform: rotate(45deg); }
+
+.ctrl-panel {
+  display: flex; flex-direction: column; gap: 4px;
+  overflow: hidden; max-height: 0; opacity: 0; pointer-events: none;
+  transition: max-height .3s cubic-bezier(.4,0,.2,1), opacity .22s;
+}
+.ctrl-panel.open { max-height: 400px; opacity: 1; pointer-events: auto; }
+
+.ctrl-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 14px;
+  background: var(--surface); border: 1.5px solid var(--line);
+  border-radius: var(--radius); font-family: inherit;
+  font-size: 0.8rem; font-weight: 500; cursor: pointer;
+  color: var(--ink-mid); white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition: background .16s, color .16s, border-color .16s, transform .16s;
+  width: 100%; text-align: left;
+}
+.ctrl-btn:hover { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent); transform: translateX(-2px); }
+.ctrl-btn.off { color: var(--ink-faint); border-color: var(--line); }
+.ctrl-btn.off .cicon { opacity: 0.35; }
+.ctrl-btn.off:hover { color: var(--ink-mid); border-color: var(--line-strong); background: var(--raised); }
+.ctrl-btn:disabled { opacity: 0.4; pointer-events: none; }
+.cicon { font-size: 0.85rem; width: 16px; text-align: center; flex-shrink: 0; color: var(--accent); }
+.ctrl-btn.off .cicon { color: var(--ink-faint); }
+
+/* delete button on img */
+.delete-btn {
+  position: absolute; top: -6px; right: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface); color: var(--danger);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  box-shadow: var(--shadow-md); opacity: 0; transition: opacity .15s; z-index: 200;
+  border: 1.5px solid var(--line);
+}
+.img-node:hover .delete-btn { opacity: 1; }
+
+/* ══════════════════════════════════════════════
+   OVERLAYS
+══════════════════════════════════════════════ */
+.save-overlay {
+  position: fixed; inset: 0; background: rgba(23,51,74,0.35);
+  backdrop-filter: blur(6px); z-index: 9999;
+  display: none; align-items: center; justify-content: center;
+}
+.save-overlay.show { display: flex; }
+.save-card {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  background: var(--surface); border: 1.5px solid var(--line);
+  border-radius: 16px; padding: 28px 36px;
+  box-shadow: var(--shadow-lg);
+}
+.save-spinner {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 2.5px solid var(--accent-soft); border-top-color: var(--accent);
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.save-text { font-size: 0.8rem; font-weight: 700; color: var(--ink-mid); letter-spacing: 0.08em; }
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--ink); color: var(--bg);
+  padding: 8px 18px; border-radius: var(--radius);
+  font-size: 0.78rem; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transition: opacity .22s, transform .22s;
+  z-index: 9998; white-space: nowrap; pointer-events: none;
+}
+[data-theme="dark"] .toast { background: var(--raised2); color: var(--ink); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════ */
+@media (max-width: 700px) {
+  body { flex-direction: column; height: 100dvh; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 280px !important; min-width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform .3s cubic-bezier(.23,1,.32,1);
+    z-index: 1600; box-shadow: 8px 0 32px rgba(23,51,74,0.15);
+    padding: 68px 20px 24px !important; opacity: 1 !important; overflow-y: auto !important;
+  }
+  .sidebar.open { transform: translateX(0); }
+  body.sidebar-hidden .sidebar { transform: translateX(-100%); }
+  body:not(.sidebar-hidden) .sidebar-toggle { left: 16px; }
+  #stage-container { flex: 1; width: 100%; height: 100dvh; }
+  .ctrl-btn .clabel { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="save-overlay" id="saveOverlay">
+  <div class="save-card">
+    <div class="save-spinner"></div>
+    <div class="save-text">画像を保存中...</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<button class="sidebar-toggle" onclick="toggleSidebar()" title="サイドバーを開閉">
+  <span class="stoggle-icon">‹</span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<div class="sidebar" id="sidebar">
+
+  <div class="brand">
+    <span class="brand-title">Chara Color <em>Wheel</em></span>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="ダーク/ライト切替">🌙</button>
+  </div>
+
+  <div class="storage-wrap">
+    <div class="storage-head">
+      <span class="storage-text" id="storageText">読み込み中…</span>
+      <span class="storage-quota" id="storageQuota"></span>
+    </div>
+    <div class="storage-track"><div class="storage-fill" id="storageBarFill" style="width:0%"></div></div>
+    <div class="storage-pct" id="storagePct"></div>
+  </div>
+
+  <div class="lbl">Character Name</div>
+  <input class="inp" type="text" id="nameInput" placeholder="名前を入力" autocomplete="off">
+
+  <div class="lbl">Main Color</div>
+  <div class="color-row">
+    <div class="color-swatch" id="colorPreviewBox" style="background:#3b82f6;">
+      <input type="color" id="colorPicker" value="#3b82f6" oninput="handleColorChange(this.value)">
+    </div>
+    <input class="inp hex-inp" type="text" id="hexInput" value="#3B82F6" maxlength="7" oninput="handleHexInput(this.value)">
+  </div>
+
+  <div class="lbl">Character Image</div>
+  <label for="imageInput" class="upload-btn">
+    <span>↑</span> 画像をアップロード
+  </label>
+  <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(this)">
+  <img id="imagePreview" class="img-preview-mini">
+
+  <button class="add-btn" onclick="addCharacter()">＋ 色相環に追加</button>
+
+  <div class="lbl">Size</div>
+  <div class="slider-row">
+    <input type="range" id="sizeSlider" min="50" max="180" value="110" oninput="onSizeChange(this.value)">
+    <span class="sval" id="sizeVal">110</span>
+  </div>
+
+  <div class="lbl">Orbit</div>
+  <div class="slider-row">
+    <input type="range" id="orbitSlider" min="40" max="220" value="100" oninput="onOrbitChange(this.value)">
+    <span class="sval" id="orbitVal">100%</span>
+  </div>
+
+  <div class="list-header">
+    <div class="lbl">Characters</div>
+    <button class="sort-badge" id="sortBadge" onclick="toggleSortMode()">色相順</button>
+  </div>
+  <div class="chara-list" id="charaList"></div>
+
+  <div class="lbl">Presets</div>
+  <div class="preset-row">
+    <input class="inp preset-inp" type="text" id="presetNameInput" placeholder="プリセット名" maxlength="30">
+    <button class="preset-save" onclick="savePreset()">保存</button>
+  </div>
+  <div class="preset-list" id="presetList"></div>
+
+  <div class="lbl">Color History</div>
+  <div class="history-dots" id="historyGrid"></div>
+
+  <button class="reset-btn" onclick="resetAll()">全データをリセット</button>
+</div>
+
+<!-- ══════════ STAGE ══════════ -->
+<div id="stage-container">
+  <div class="stage-controls">
+    <button class="ctrl-toggle" id="ctrlToggleBtn" onclick="toggleCtrlPanel()" title="操作パネル">
+      <span class="ctoggle-icon">⊹</span>
+    </button>
+    <div class="ctrl-panel" id="ctrlPanel">
+      <button class="ctrl-btn" id="nameToggleBtn" onclick="toggleNames()">
+        <span class="cicon">◉</span><span class="clabel">名前の表示</span>
+      </button>
+      <button class="ctrl-btn" id="imgToggleBtn" onclick="toggleImages()">
+        <span class="cicon">◈</span><span class="clabel">画像の表示</span>
+      </button>
+      <button class="ctrl-btn" id="resetPanBtn" onclick="resetPan()" style="display:none;">
+        <span class="cicon">⊕</span><span class="clabel">中央に戻す</span>
+      </button>
+      <button class="ctrl-btn" id="saveBtn" onclick="saveImage()">
+        <span class="cicon">↓</span><span class="clabel">画像を保存</span>
+      </button>
+    </div>
+  </div>
+  <div id="stage"><div id="stageInner"></div></div>
+</div>
+
+<script>
+// ================================================================
+//  STATE
+// ================================================================
+let charasList    = [];
+let historyColors = [];
+let currentImgData = null;
+let baseSize   = 110;
+let orbitScale = 100;
+let showNames  = true;
+let showImages = true;
+let manualOrder = false;
+let currentTheme = 'light';
+let dragSrcId = null, dragOverId = null;
+
+let panX = 0, panY = 0;
+let stageZoom = 1;
+let isPanning = false, panStartX = 0, panStartY = 0, panBaseX = 0, panBaseY = 0;
+
+// ================================================================
+//  IndexedDB
+// ================================================================
+const DB_NAME = 'CharaColorWheel', DB_VERSION = 1;
+const STORE_MAIN = 'main', STORE_PRESETS = 'presets';
+let db = null;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+            const d = e.target.result;
+            if(!d.objectStoreNames.contains(STORE_MAIN))    d.createObjectStore(STORE_MAIN);
+            if(!d.objectStoreNames.contains(STORE_PRESETS)) d.createObjectStore(STORE_PRESETS);
+        };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror   = e => reject(e.target.error);
+    });
+}
+async function idbSet(store, key, value) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        const req = tx.objectStore(store).put(value, key);
+        req.onsuccess = () => resolve(); req.onerror = e => reject(e.target.error);
+    });
+}
+async function idbGet(store, key) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).get(key);
+        req.onsuccess = e => resolve(e.target.result); req.onerror = e => reject(e.target.error);
+    });
+}
+async function idbDelete(store, key) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        const req = tx.objectStore(store).delete(key);
+        req.onsuccess = () => resolve(); req.onerror = e => reject(e.target.error);
+    });
+}
+async function idbGetAllKeys(store) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).getAllKeys();
+        req.onsuccess = e => resolve(e.target.result); req.onerror = e => reject(e.target.error);
+    });
+}
+
+// ================================================================
+//  画像圧縮
+// ================================================================
+function compressImage(dataUrl, maxSide = 480, quality = 0.82) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if(w > maxSide || h > maxSide) {
+                if(w >= h) { h = Math.round(h * maxSide / w); w = maxSide; }
+                else       { w = Math.round(w * maxSide / h); h = maxSide; }
+            }
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            const c2 = cv.getContext('2d');
+            c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, w, h);
+            c2.drawImage(img, 0, 0, w, h);
+            resolve(cv.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+    });
+}
+
+// ================================================================
+//  保存 / 読み込み
+// ================================================================
+async function saveData() {
+    if(!db) return;
+    await idbSet(STORE_MAIN, 'state', { charasList, historyColors, baseSize, orbitScale, showNames, showImages, manualOrder, currentTheme });
+    updateStorageBar();
+}
+async function loadData() {
+    const s = await idbGet(STORE_MAIN, 'state');
+    if(!s) return;
+    if(s.charasList)     charasList    = s.charasList;
+    if(s.historyColors)  historyColors = s.historyColors;
+    if(s.baseSize    != null) { baseSize   = s.baseSize;   document.getElementById('sizeSlider').value  = baseSize;   document.getElementById('sizeVal').textContent  = baseSize; }
+    if(s.orbitScale  != null) { orbitScale = s.orbitScale; document.getElementById('orbitSlider').value = orbitScale; document.getElementById('orbitVal').textContent = orbitScale + '%'; }
+    if(s.showNames   != null) showNames   = s.showNames;
+    if(s.showImages  != null) showImages  = s.showImages;
+    if(s.manualOrder != null) manualOrder = s.manualOrder;
+    if(s.currentTheme)        { currentTheme = s.currentTheme; applyTheme(currentTheme, false); }
+}
+
+// ================================================================
+//  THEME
+// ================================================================
+function applyTheme(theme, save = true) {
+    currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+    if(save) saveData();
+}
+function toggleTheme() { applyTheme(currentTheme === 'light' ? 'dark' : 'light'); }
+
+// ================================================================
+//  ストレージバー
+// ================================================================
+async function updateStorageBar() {
+    try {
+        if(!navigator.storage?.estimate) { document.getElementById('storageText').textContent = '取得不可'; return; }
+        const est = await navigator.storage.estimate();
+        const used = est.usage||0, quota = est.quota||1;
+        const pct = Math.min(100, (used/quota)*100);
+        const usedMB = (used/1024/1024).toFixed(1);
+        const quotaStr = quota >= 1073741824 ? (quota/1073741824).toFixed(1)+' GB' : (quota/1048576).toFixed(0)+' MB';
+        document.getElementById('storageText').textContent  = `使用中: ${usedMB} MB`;
+        document.getElementById('storageQuota').textContent = `上限: ${quotaStr}`;
+        document.getElementById('storageBarFill').style.width = Math.max(pct, 0.3) + '%';
+        document.getElementById('storagePct').textContent = pct.toFixed(1) + '%';
+        const fill = document.getElementById('storageBarFill');
+        fill.classList.remove('warn','alert');
+        const pctEl = document.getElementById('storagePct');
+        if(pct > 80)      { fill.classList.add('alert'); pctEl.style.color = 'var(--danger)'; }
+        else if(pct > 50) { fill.classList.add('warn');  pctEl.style.color = '#F59E0B'; }
+        else              { pctEl.style.color = 'var(--accent-text)'; }
+    } catch(e) { document.getElementById('storageText').textContent = '取得不可'; }
+}
+
+// ================================================================
+//  PRESET
+// ================================================================
+async function savePreset() {
+    const el = document.getElementById('presetNameInput');
+    const name = el.value.trim();
+    if(!name) { showToast('プリセット名を入力してください'); return; }
+    await idbSet(STORE_PRESETS, name, { name, charasList: JSON.parse(JSON.stringify(charasList)), historyColors: [...historyColors], baseSize, orbitScale, showNames, manualOrder, savedAt: Date.now(), count: charasList.length });
+    el.value = '';
+    showToast(`「${name}」を保存しました`);
+    renderPresetList(); updateStorageBar();
+}
+async function loadPreset(name) {
+    const p = await idbGet(STORE_PRESETS, name);
+    if(!p) return;
+    charasList = p.charasList||[]; historyColors = p.historyColors||[];
+    baseSize = p.baseSize??110; orbitScale = p.orbitScale??100;
+    showNames = p.showNames??true; manualOrder = p.manualOrder??false;
+    document.getElementById('sizeSlider').value  = baseSize;   document.getElementById('sizeVal').textContent  = baseSize;
+    document.getElementById('orbitSlider').value = orbitScale; document.getElementById('orbitVal').textContent = orbitScale+'%';
+    updateNameToggleBtn(); updateSortBadge();
+    await saveData(); renderHistory(); renderCharaList(); renderStage();
+    showToast(`「${name}」を読み込みました`);
+}
+async function deletePreset(name) {
+    if(!confirm(`「${name}」を削除しますか？`)) return;
+    await idbDelete(STORE_PRESETS, name);
+    showToast(`「${name}」を削除しました`);
+    renderPresetList(); updateStorageBar();
+}
+async function overwritePreset(name) {
+    if(!confirm(`「${name}」を現在の状態で上書きしますか？`)) return;
+    await idbSet(STORE_PRESETS, name, { name, charasList: JSON.parse(JSON.stringify(charasList)), historyColors: [...historyColors], baseSize, orbitScale, showNames, manualOrder, savedAt: Date.now(), count: charasList.length });
+    showToast(`「${name}」を上書き保存しました`);
+    renderPresetList(); updateStorageBar();
+}
+async function renderPresetList() {
+    const el = document.getElementById('presetList'); el.innerHTML = '';
+    const keys = await idbGetAllKeys(STORE_PRESETS);
+    if(!keys.length) { el.innerHTML = '<div class="preset-empty">プリセットはありません</div>'; return; }
+    const all = await Promise.all(keys.map(k => idbGet(STORE_PRESETS, k)));
+    all.sort((a,b) => (b.savedAt||0)-(a.savedAt||0));
+    all.forEach(p => {
+        const item = document.createElement('div'); item.className = 'preset-item';
+        const n  = document.createElement('div'); n.className = 'preset-name'; n.textContent = p.name; n.title = p.name;
+        const c  = document.createElement('div'); c.className = 'preset-cnt'; c.textContent = `${p.count}人`;
+        const lb = document.createElement('button'); lb.className = 'preset-load'; lb.textContent = '読込'; lb.onclick = () => loadPreset(p.name);
+        const ow = document.createElement('button'); ow.className = 'preset-overwrite'; ow.textContent = '上書'; ow.title = '現在の状態で上書き保存'; ow.onclick = () => overwritePreset(p.name);
+        const db2= document.createElement('button'); db2.className = 'preset-del'; db2.textContent = '✕'; db2.onclick = () => deletePreset(p.name);
+        item.append(n,c,lb,ow,db2); el.appendChild(item);
+    });
+}
+
+// ================================================================
+//  TOAST
+// ================================================================
+let _tt = null;
+function showToast(msg) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ================================================================
+//  COLOR
+// ================================================================
+function getHue(hex) {
+    const r=parseInt(hex.slice(1,3),16)/255, g=parseInt(hex.slice(3,5),16)/255, b=parseInt(hex.slice(5,7),16)/255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b); let h=0;
+    if(max!==min){ if(max===r) h=(g-b)/(max-min)+(g<b?6:0); else if(max===g) h=(b-r)/(max-min)+2; else h=(r-g)/(max-min)+4; }
+    return h*60;
+}
+function handleColorChange(hex) { document.getElementById('colorPreviewBox').style.background=hex; document.getElementById('hexInput').value=hex.toUpperCase(); }
+function handleHexInput(hex) {
+    if(hex.length>0&&hex[0]!=='#') hex='#'+hex;
+    document.getElementById('hexInput').value=hex.toUpperCase();
+    if(/^#[0-9A-F]{6}$/i.test(hex)){ document.getElementById('colorPicker').value=hex.toLowerCase(); document.getElementById('colorPreviewBox').style.background=hex; }
+}
+
+// ================================================================
+//  IMAGE
+// ================================================================
+async function handleImageSelect(input) {
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async e => {
+        currentImgData = await compressImage(e.target.result);
+        const p = document.getElementById('imagePreview'); p.src = currentImgData; p.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+// ================================================================
+//  ADD CHARACTER
+// ================================================================
+async function addCharacter() {
+    const nameVal = document.getElementById('nameInput').value.trim();
+    const colorVal = document.getElementById('colorPicker').value;
+    charasList.push({ id: Date.now(), name: nameVal||'No Name', color: colorVal, hue: getHue(colorVal), img: currentImgData });
+    if(!manualOrder) charasList.sort((a,b)=>a.hue-b.hue);
+    if(!historyColors.includes(colorVal)){ historyColors.push(colorVal); renderHistory(); }
+    document.getElementById('nameInput').value = '';
+    document.getElementById('imageInput').value = '';
+    currentImgData = null;
+    document.getElementById('imagePreview').style.display = 'none';
+    await saveData(); renderCharaList(); renderStage();
+}
+
+// ================================================================
+//  SLIDERS
+// ================================================================
+async function onSizeChange(val)  { baseSize  =parseInt(val); document.getElementById('sizeVal').textContent =val;       await saveData(); renderStage(); }
+async function onOrbitChange(val) { orbitScale=parseInt(val); document.getElementById('orbitVal').textContent=val+'%'; await saveData(); renderStage(); }
+
+// ================================================================
+//  PANEL / TOGGLES
+// ================================================================
+function toggleCtrlPanel() {
+    const btn = document.getElementById('ctrlToggleBtn'), panel = document.getElementById('ctrlPanel');
+    const o = panel.classList.toggle('open'); btn.classList.toggle('open', o);
+}
+async function toggleNames()  { showNames =!showNames;  document.getElementById('nameToggleBtn').classList.toggle('off',!showNames);  await saveData(); renderStage(); }
+async function toggleImages() { showImages=!showImages; document.getElementById('imgToggleBtn').classList.toggle('off',!showImages); await saveData(); renderStage(); }
+function updateNameToggleBtn() { document.getElementById('nameToggleBtn').classList.toggle('off',!showNames); }
+function updateImgToggleBtn()  { document.getElementById('imgToggleBtn').classList.toggle('off',!showImages); }
+
+// ================================================================
+//  PAN
+// ================================================================
+function applyPan() {
+    document.getElementById('stageInner').style.transform = `translate(${panX}px,${panY}px) scale(${stageZoom})`;
+    document.getElementById('stageInner').style.transformOrigin = 'center center';
+    const moved = (panX!==0||panY!==0||Math.abs(stageZoom-1)>0.01);
+    document.getElementById('resetPanBtn').style.display = moved ? '' : 'none';
+}
+function resetPan() { panX=0; panY=0; stageZoom=1; applyPan(); }
+function initPan() {
+    const c = document.getElementById('stage-container');
+    c.addEventListener('mousedown', e => {
+        if(e.target.closest('.stage-controls,.img-node,.delete-btn')) return;
+        isPanning=true; panStartX=e.clientX; panStartY=e.clientY; panBaseX=panX; panBaseY=panY;
+        c.classList.add('panning');
+    });
+    window.addEventListener('mousemove', e => {
+        if(!isPanning) return;
+        panX=panBaseX+(e.clientX-panStartX); panY=panBaseY+(e.clientY-panStartY); applyPan();
+    });
+    window.addEventListener('mouseup', () => { isPanning=false; document.getElementById('stage-container').classList.remove('panning'); });
+    // ホイールズーム
+    c.addEventListener('wheel', e => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.92 : 1.08;
+        stageZoom = Math.min(4, Math.max(0.2, stageZoom * delta));
+        applyPan();
+    }, { passive: false });
+    c.addEventListener('touchstart', e => {
+        if(e.target.closest('.stage-controls,.img-node,.delete-btn')||e.touches.length!==1) return;
+        isPanning=true; panStartX=e.touches[0].clientX; panStartY=e.touches[0].clientY; panBaseX=panX; panBaseY=panY;
+    }, {passive:true});
+    window.addEventListener('touchmove', e => {
+        if(!isPanning||e.touches.length!==1) return;
+        panX=panBaseX+(e.touches[0].clientX-panStartX); panY=panBaseY+(e.touches[0].clientY-panStartY); applyPan();
+    }, {passive:true});
+    window.addEventListener('touchend', () => { isPanning=false; });
+}
+
+// ================================================================
+//  SIDEBAR
+// ================================================================
+function toggleSidebar() {
+    if(window.innerWidth <= 700) {
+        const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay');
+        const open=s.classList.toggle('open'); o.classList.toggle('open',open);
+    } else {
+        document.body.classList.toggle('sidebar-hidden'); renderStage();
+    }
+}
+async function toggleSortMode() { manualOrder=!manualOrder; if(!manualOrder) charasList.sort((a,b)=>a.hue-b.hue); updateSortBadge(); await saveData(); renderCharaList(); renderStage(); }
+function updateSortBadge() { const b=document.getElementById('sortBadge'); b.textContent=manualOrder?'手動順':'色相順'; b.classList.toggle('manual',manualOrder); }
+
+// ================================================================
+//  DELETE
+// ================================================================
+async function removeCharacter(id) { charasList=charasList.filter(c=>c.id!==id); await saveData(); renderCharaList(); renderStage(); }
+async function removeImage(id)     { const c=charasList.find(c=>c.id===id); if(c) c.img=null; await saveData(); renderCharaList(); renderStage(); }
+async function resetAll()          { if(!confirm('全てのデータを消去しますか？')) return; charasList=[]; await saveData(); renderCharaList(); renderStage(); }
+
+// ================================================================
+//  UPDATE HELPERS
+// ================================================================
+async function updateCharaName(id,n)    { const c=charasList.find(c=>c.id===id); if(!c) return; c.name=n.trim()||'No Name'; await saveData(); renderCharaList(); renderStage(); }
+async function updateCharaColor(id,col) { const c=charasList.find(c=>c.id===id); if(!c) return; c.color=col; c.hue=getHue(col); if(!manualOrder) charasList.sort((a,b)=>a.hue-b.hue); if(!historyColors.includes(col)){historyColors.push(col);renderHistory();} await saveData(); renderCharaList(); renderStage(); }
+async function updateCharaImage(id,data) { const cp=await compressImage(data); const c=charasList.find(c=>c.id===id); if(!c) return; c.img=cp; await saveData(); renderCharaList(); renderStage(); }
+
+// ================================================================
+//  DRAG & DROP
+// ================================================================
+function onDragStart(e,id) { dragSrcId=id; e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',id); setTimeout(()=>e.target.closest('.chara-item').classList.add('dragging'),0); }
+function onDragOver(e,id)  { e.preventDefault(); e.dataTransfer.dropEffect='move'; if(dragOverId!==id){ dragOverId=id; document.querySelectorAll('.chara-item').forEach(el=>el.classList.remove('drag-over')); const t=document.querySelector(`.chara-item[data-id="${id}"]`); if(t) t.classList.add('drag-over'); } }
+function onDragEnd()       { document.querySelectorAll('.chara-item').forEach(el=>el.classList.remove('dragging','drag-over')); dragSrcId=null; dragOverId=null; }
+async function onDrop(e,tgtId) {
+    e.preventDefault(); if(!dragSrcId||dragSrcId===tgtId) return;
+    const si=charasList.findIndex(c=>c.id===dragSrcId), ti=charasList.findIndex(c=>c.id===tgtId);
+    if(si<0||ti<0) return;
+    const [m]=charasList.splice(si,1); charasList.splice(ti,0,m);
+    if(!manualOrder){ manualOrder=true; updateSortBadge(); }
+    await saveData(); renderCharaList(); renderStage();
+}
+
+// ================================================================
+//  RENDER: HISTORY
+// ================================================================
+function renderHistory() {
+    const g=document.getElementById('historyGrid'); g.innerHTML='';
+    historyColors.forEach(hex=>{ const d=document.createElement('div'); d.className='hswatch'; d.style.background=hex; d.title=hex; d.onclick=()=>{document.getElementById('colorPicker').value=hex;handleColorChange(hex);}; g.appendChild(d); });
+}
+
+// ================================================================
+//  RENDER: CHARA LIST
+// ================================================================
+function renderCharaList() {
+    const list=document.getElementById('charaList'); list.innerHTML='';
+    if(!charasList.length){ list.innerHTML='<div style="font-size:0.76rem;color:var(--ink-faint);padding:4px 2px;">まだキャラがいません</div>'; return; }
+    charasList.forEach(chara=>{
+        const item=document.createElement('div'); item.className='chara-item'; item.dataset.id=chara.id; item.draggable=true;
+        item.addEventListener('dragstart',e=>onDragStart(e,chara.id));
+        item.addEventListener('dragover', e=>onDragOver(e,chara.id));
+        item.addEventListener('dragend',  onDragEnd);
+        item.addEventListener('drop',     e=>onDrop(e,chara.id));
+
+        const handle=document.createElement('div'); handle.className='drag-handle'; handle.innerHTML='⠿'; handle.title='ドラッグで並び替え';
+
+        const dotWrap=document.createElement('div'); dotWrap.className='chara-dot-wrap'; dotWrap.title='色を変更';
+        const dot=document.createElement('div'); dot.className='chara-dot'; dot.style.background=chara.color;
+        const dotInp=document.createElement('input'); dotInp.type='color'; dotInp.className='chara-dot-input'; dotInp.value=chara.color;
+        dotInp.oninput=e=>updateCharaColor(chara.id,e.target.value);
+        dotWrap.append(dot,dotInp);
+
+        const thumbWrap=document.createElement('div'); thumbWrap.className='chara-thumb-wrap'; thumbWrap.title=chara.img?'画像を変更':'画像を追加';
+        let thumbEl;
+        if(chara.img){ thumbEl=document.createElement('img'); thumbEl.className='chara-thumb'; thumbEl.src=chara.img; }
+        else { thumbEl=document.createElement('div'); thumbEl.className='chara-ph'; thumbEl.textContent='+'; }
+        const fi=document.createElement('input'); fi.type='file'; fi.className='chara-img-input'; fi.accept='image/*';
+        fi.onchange=async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>updateCharaImage(chara.id,ev.target.result);r.readAsDataURL(f);};
+        thumbWrap.append(thumbEl,fi); thumbWrap.onclick=()=>fi.click();
+
+        const nameEl=document.createElement('div'); nameEl.className='chara-name'; nameEl.textContent=chara.name; nameEl.title='クリックで編集';
+        nameEl.onclick=()=>{
+            const inp=document.createElement('input'); inp.type='text'; inp.className='chara-name-inp'; inp.value=chara.name;
+            nameEl.replaceWith(inp); inp.focus(); inp.select();
+            inp.onblur=()=>updateCharaName(chara.id,inp.value);
+            inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=chara.name;inp.blur();}};
+        };
+
+        const acts=document.createElement('div'); acts.className='chara-actions';
+        const dI=document.createElement('button'); dI.className='ic-btn'; dI.title='画像を削除'; dI.textContent='⊠'; dI.disabled=!chara.img; dI.onclick=()=>removeImage(chara.id);
+        const dA=document.createElement('button'); dA.className='ic-btn danger'; dA.title='キャラを削除'; dA.textContent='✕'; dA.onclick=()=>removeCharacter(chara.id);
+        acts.append(dI,dA);
+
+        item.append(handle,dotWrap,thumbWrap,nameEl,acts);
+        list.appendChild(item);
+    });
+}
+
+// ================================================================
+//  RENDER: STAGE
+// ================================================================
+function renderStage() {
+    const inner=document.getElementById('stageInner'); inner.innerHTML='';
+    const stage=document.getElementById('stage');
+    const count=charasList.length; if(!count) return;
+    const colorSize=baseSize, imgSize=Math.round(baseSize*1.3), GAP=8;
+    const oScale=orbitScale/100;
+    const minR=(count*(colorSize+30))/(2*Math.PI);
+    const radiusColor=Math.max(150,minR)*oScale;
+    const radiusImg=radiusColor+colorSize/2+GAP+imgSize/2;
+    const cx=stage.clientWidth/2, cy=stage.clientHeight/2;
+    const cNodes=[],iNodes=[],nNodes=[];
+
+    charasList.forEach((chara,i)=>{
+        const a=((i/count)*360-90)*Math.PI/180;
+        const cosA=Math.cos(a), sinA=Math.sin(a);
+        const cX=cx+radiusColor*cosA, cY=cy+radiusColor*sinA;
+        const iX=cx+radiusImg*cosA,   iY=cy+radiusImg*sinA;
+
+        const colorEl=document.createElement('div');
+        colorEl.style.cssText=`position:absolute;width:${colorSize}px;height:${colorSize}px;border-radius:50%;background:${chara.color};left:${cX}px;top:${cY}px;transform:translate(-50%,-50%);box-shadow:0 4px 20px rgba(0,0,0,0.18);z-index:10;transition:transform .2s,box-shadow .2s;`;
+        colorEl.onmouseenter=()=>{ colorEl.style.transform='translate(-50%,-50%) scale(1.1)'; colorEl.style.boxShadow='0 8px 28px rgba(0,0,0,0.24)'; };
+        colorEl.onmouseleave=()=>{ colorEl.style.transform='translate(-50%,-50%)'; colorEl.style.boxShadow='0 4px 20px rgba(0,0,0,0.18)'; };
+        cNodes.push(colorEl);
+
+        if(chara.img && showImages){
+            const wrap=document.createElement('div'); wrap.className='img-node';
+            wrap.style.cssText=`position:absolute;width:${imgSize}px;height:${imgSize}px;border-radius:50%;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.1);left:${iX}px;top:${iY}px;transform:translate(-50%,-50%);cursor:pointer;z-index:20;transition:transform .2s,box-shadow .2s;`;
+            wrap.onmouseenter=()=>{ wrap.style.transform='translate(-50%,-50%) scale(1.07)'; wrap.style.boxShadow='0 12px 36px rgba(0,0,0,0.22),0 4px 12px rgba(0,0,0,0.12)'; };
+            wrap.onmouseleave=()=>{ wrap.style.transform='translate(-50%,-50%)'; wrap.style.boxShadow='0 6px 24px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.1)'; };
+            const ie=document.createElement('img'); ie.src=chara.img; ie.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+            const del=document.createElement('div'); del.className='delete-btn'; del.textContent='×'; del.onclick=e=>{e.stopPropagation();removeCharacter(chara.id);};
+            wrap.append(ie,del); iNodes.push(wrap);
+        }
+
+        if(showNames){
+            const nr=radiusColor+colorSize/2+GAP/2;
+            const ne=document.createElement('div'); ne.textContent=chara.name;
+            ne.style.cssText=`position:absolute;left:${cx+nr*cosA}px;top:${cy+nr*sinA}px;transform:translate(-50%,-50%);font-family:'Noto Sans JP',sans-serif;font-size:0.72rem;font-weight:500;color:var(--ink);background:var(--surface);padding:3px 11px;border-radius:20px;box-shadow:0 2px 8px rgba(23,51,74,0.1);border:1px solid var(--line);white-space:nowrap;pointer-events:none;z-index:100;`;
+            nNodes.push(ne);
+        }
+    });
+    cNodes.forEach(el=>inner.appendChild(el));
+    iNodes.forEach(el=>inner.appendChild(el));
+    nNodes.forEach(el=>inner.appendChild(el));
+    applyPan();
+}
+
+// ================================================================
+//  SAVE IMAGE
+// ================================================================
+async function saveImage() {
+    const count=charasList.length; if(!count){alert('キャラクターを追加してから保存してください。');return;}
+    const overlay=document.getElementById('saveOverlay'), btn=document.getElementById('saveBtn');
+    overlay.classList.add('show'); btn.disabled=true;
+    try {
+        const DPR=2, PAD=60*2;
+        const colorSize=baseSize*DPR, imgSize=Math.round(baseSize*1.3)*DPR, GAP=8*DPR;
+        const oScale=orbitScale/100;
+        const minR=(count*(colorSize+30*DPR))/(2*Math.PI);
+        const radiusColor=Math.max(150*DPR,minR)*oScale;
+        const radiusImg=radiusColor+colorSize/2+GAP+imgSize/2;
+
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        charasList.forEach((chara,i)=>{
+            const a=((i/count)*360-90)*Math.PI/180;
+            const cosA=Math.cos(a),sinA=Math.sin(a);
+            const cx0=radiusColor*cosA,cy0=radiusColor*sinA;
+            minX=Math.min(minX,cx0-colorSize/2); maxX=Math.max(maxX,cx0+colorSize/2);
+            minY=Math.min(minY,cy0-colorSize/2); maxY=Math.max(maxY,cy0+colorSize/2);
+            const outerR=imgSize/2+4*DPR;
+            const ix0=radiusImg*cosA,iy0=radiusImg*sinA;
+            minX=Math.min(minX,ix0-outerR); maxX=Math.max(maxX,ix0+outerR);
+            minY=Math.min(minY,iy0-outerR); maxY=Math.max(maxY,iy0+outerR);
+            if(showNames){
+                const estW=(chara.name.length*9+30)*DPR, estH=26*DPR;
+                const nr=radiusColor+colorSize/2+GAP/2;
+                const nx0=nr*cosA,ny0=nr*sinA;
+                minX=Math.min(minX,nx0-estW/2); maxX=Math.max(maxX,nx0+estW/2);
+                minY=Math.min(minY,ny0-estH/2); maxY=Math.max(maxY,ny0+estH/2);
+            }
+        });
+        const W=(maxX-minX)+PAD*2, H=(maxY-minY)+PAD*2;
+        const cx=-minX+PAD, cy=-minY+PAD;
+
+        const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#F4F4F4'; ctx.fillRect(0,0,W,H);
+        const dotStep=44*DPR; ctx.strokeStyle='rgba(23,51,74,0.08)'; ctx.lineWidth=1;
+        for(let x=0;x<=W+dotStep;x+=dotStep){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
+        for(let y=0;y<=H+dotStep;y+=dotStep){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+
+        const loadedImgs=await Promise.all(charasList.map(chara=>{
+            if(!chara.img) return Promise.resolve(null);
+            return new Promise(res=>{ const img=new Image(); img.onload=()=>res(img); img.onerror=()=>res(null); img.src=chara.img; });
+        }));
+
+        function pill(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+
+        charasList.forEach((chara,i)=>{ const a=((i/count)*360-90)*Math.PI/180; const cx2=cx+radiusColor*Math.cos(a),cy2=cy+radiusColor*Math.sin(a); ctx.save(); ctx.shadowColor='rgba(0,0,0,0.18)'; ctx.shadowBlur=18*DPR; ctx.shadowOffsetY=4*DPR; ctx.beginPath(); ctx.arc(cx2,cy2,colorSize/2,0,Math.PI*2); ctx.fillStyle=chara.color; ctx.fill(); ctx.restore(); });
+        charasList.forEach((chara,i)=>{ const img=loadedImgs[i]; if(!img) return; const a=((i/count)*360-90)*Math.PI/180; const ix=cx+radiusImg*Math.cos(a),iy=cy+radiusImg*Math.sin(a),r=imgSize/2; ctx.save(); ctx.shadowColor='rgba(0,0,0,0.2)'; ctx.shadowBlur=22*DPR; ctx.shadowOffsetY=5*DPR; ctx.beginPath(); ctx.arc(ix,iy,r,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.restore(); ctx.save(); ctx.beginPath(); ctx.arc(ix,iy,r,0,Math.PI*2); ctx.clip(); ctx.fillStyle='#ffffff'; ctx.fillRect(ix-r,iy-r,imgSize,imgSize); ctx.drawImage(img,ix-r,iy-r,imgSize,imgSize); ctx.restore(); });
+        if(showNames){ const fs=13*DPR,px=13*DPR,py=5*DPR,lr=20*DPR; ctx.font=`500 ${fs}px "Noto Sans JP",sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; charasList.forEach((chara,i)=>{ const a=((i/count)*360-90)*Math.PI/180; const nr=radiusColor+colorSize/2+GAP/2; const nx=cx+nr*Math.cos(a),ny=cy+nr*Math.sin(a); const tw=ctx.measureText(chara.name).width; const bw=tw+px*2,bh=fs+py*2; ctx.save(); ctx.shadowColor='rgba(23,51,74,0.1)'; ctx.shadowBlur=8*DPR; ctx.shadowOffsetY=2*DPR; pill(nx-bw/2,ny-bh/2,bw,bh,lr); ctx.fillStyle='rgba(255,255,255,0.96)'; ctx.fill(); ctx.restore(); ctx.fillStyle='#17334A'; ctx.fillText(chara.name,nx,ny); }); }
+
+        canvas.toBlob(blob=>{ const url=URL.createObjectURL(blob); const link=document.createElement('a'); link.download='chara-color-wheel.png'; link.href=url; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); },'image/png');
+        showToast('画像を保存しました');
+    } catch(e) { alert('保存に失敗しました: '+e.message); }
+    finally { overlay.classList.remove('show'); btn.disabled=false; }
+}
+
+window.onresize = renderStage;
+
+// ================================================================
+//  BOOT
+// ================================================================
+(async () => {
+    try { db = await openDB(); } catch(e) { console.warn('IndexedDB unavailable', e); }
+    await loadData();
+    updateNameToggleBtn(); updateImgToggleBtn(); updateSortBadge();
+    renderHistory(); renderCharaList(); renderStage(); renderPresetList(); updateStorageBar();
+    initPan();
+})();
+</script>
+</body>
+</html>
