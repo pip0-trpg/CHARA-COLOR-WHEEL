@@ -166,6 +166,7 @@ input[type="file"] { display: none; }
   text-align: center;
 }
 .upload-btn:hover { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); }
+.upload-btn.drag-over { border-color: var(--accent); color: var(--accent-text); background: var(--accent-soft); border-style: solid; transform: scale(1.02); }
 .img-preview-mini {
   width: 36px; height: 36px; border-radius: 50%; margin-top: 8px;
   object-fit: cover; display: none;
@@ -541,7 +542,7 @@ body:not(.sidebar-hidden) .stoggle-icon { transform: rotate(180deg); }
   </div>
 
   <div class="lbl">Character Image</div>
-  <label for="imageInput" class="upload-btn">
+  <label for="imageInput" class="upload-btn" id="uploadLabel">
     <span>↑</span> 画像をアップロード
   </label>
   <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(this)">
@@ -844,6 +845,27 @@ async function handleImageSelect(input) {
         const p = document.getElementById('imagePreview'); p.src = currentImgData; p.style.display = 'block';
     };
     reader.readAsDataURL(file);
+}
+
+async function handleImageFile(file) {
+    if(!file || !file.type.startsWith('image/')) { showToast('画像ファイルをドロップしてください'); return; }
+    const reader = new FileReader();
+    reader.onload = async e => {
+        currentImgData = await compressImage(e.target.result);
+        const p = document.getElementById('imagePreview'); p.src = currentImgData; p.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function initUploadDrop() {
+    const label = document.getElementById('uploadLabel');
+    label.addEventListener('dragover', e => { e.preventDefault(); label.classList.add('drag-over'); });
+    label.addEventListener('dragleave', e => { if(!label.contains(e.relatedTarget)) label.classList.remove('drag-over'); });
+    label.addEventListener('drop', e => {
+        e.preventDefault(); label.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        handleImageFile(file);
+    });
 }
 
 // ================================================================
@@ -1176,7 +1198,7 @@ window.onresize = renderStage;
     await loadData();
     updateNameToggleBtn(); updateImgToggleBtn(); updateSortBadge();
     renderHistory(); renderCharaList(); renderStage(); renderPresetList(); updateStorageBar();
-    initPan();
+    initPan(); initUploadDrop();
 })();
 </script>
 </body>
